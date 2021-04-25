@@ -7,9 +7,68 @@ var http = require('http');
 var url = require('url');
 var StringDecoder = require('string_decoder').StringDecoder;
 var config = require('./config');
+var fs = require('fs');
+var _data = require('./lib/data');
 
+// Testing
+// @TODO delete this
+/*_data.create('test','newFile',{'foo':'bar'},function(err){
+  console.log('this is the error', err);
+});
+*/
+
+/*_data.update('test','newFile',{'foo':'world'},function(err){
+  console.log('this is the error ',err);
+});*/
+
+/*_data.read('test','newFile',function(err,data){
+  console.log('this was the error ',err, ' and this was the data ',data);
+})*/
+
+_data.delete('test','newFile',function(err){
+  console.log('This is the error ', err);
+});
+
+// Instantiating an HTTPS Server
+/*
+var httpsServerOptions = {
+'key':fs.readFileSync('./https/key.pem'),
+'cert':fs.readFileSync('./https/cert.pem')
+}
+var httpsServer = https.createServer(httpsServerOptions, function(req,res){
+   //unifiedServer(req,res)
+})
+*/
+
+// Instantiating and http server
 var server = http.createServer(function(req,res){
+  unifiedServer(req,res);
+});
 
+server.listen(config.port, function(){
+  console.log("The Server is listening on port " +config.port+ " in " + config.envName + " now");
+});
+
+// Define the handlers
+var handlers = {};
+
+// Ping handler
+handlers.ping = function(data,callback){
+  // Callback a http status code and a payload object
+  callback(200);
+};
+
+// Not found handlers
+handlers.notFound = function(data, callback){
+  callback(404);
+};
+
+// Define a request router
+var router = {
+  'ping' : handlers.ping
+};
+
+var unifiedServer = function(req,res){
   // Get the url and parse interval
   var parsedUrl = url.parse(req.url,true);
 
@@ -59,34 +118,11 @@ var server = http.createServer(function(req,res){
       var payloadString = JSON.stringify(payload);
 
       // Return the response
-      res.setHeader('Content-Type', "application/json")
+      res.setHeader('Content-Type', 'application/json')
       res.writeHead(statusCode);
       res.end(payloadString);
 
       console.log('Returning this response: ', statusCode, payloadString);
     });
-  })
-});
-
-server.listen(config.port, function(){
-  console.log("The Server is listening on port " +config.port+ " in " + config.envName + " now");
-});
-
-// Define the handlers
-var handlers = {};
-
-// Sample handler
-handlers.sample = function(data,callback){
-  // Callback a http status code and a payload object
-  callback(406,{'name': 'sample handler'});
-};
-
-// Not found handlers
-handlers.notFound = function(data, callback){
-  callback(404);
-};
-
-// Define a request router
-var router = {
-  'sample' : handlers.sample
+  });
 };
